@@ -1,0 +1,7 @@
+# This file contains additional build requirements that did not get
+# picked up automatically. One name per line, no whitespace.
+zlib-dev
+libcap-ng-dev
+libcap-dev
+glib-dev
+pkgconfig(pixman-1)
