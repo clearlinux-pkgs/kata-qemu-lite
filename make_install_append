@@ -3,6 +3,6 @@ for file in %{buildroot}/usr/bin/*
 do
     dir=$(dirname "$file")
     bin=$(basename "$file")
-    new=$(echo "$bin"|sed -e 's/qemu-/kata-qemu-lite-/g' -e 's/ivshmem-/ivshmem-lite-/g' -e 's/virtfs-/virtfs-lite-/g')
+    new=$(echo "$bin"|sed -e 's/qemu-/kata-qemu-lite-/g' -e 's/ivshmem-/ivshmem-lite-/g' -e 's/virtfs-/kata-virtfs-lite-/g')
     mv "$file" "$dir/$new"
 done
