@@ -4,7 +4,7 @@
 #
 Name     : kata-qemu-lite
 Version  : 2.11.0
-Release  : 1
+Release  : 2
 URL      : https://github.com/kata-containers/qemu/archive/qemu-lite-2.11.0.tar.gz
 Source0  : https://github.com/kata-containers/qemu/archive/qemu-lite-2.11.0.tar.gz
 Source1  : https://github.com/qemu/capstone/archive/22ead3e0bfdb87516656453336160e0a37b066bf.tar.gz
@@ -68,7 +68,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1527622046
+export SOURCE_DATE_EPOCH=1527891275
 %configure --disable-static --disable-bluez \
 --disable-brlapi \
 --disable-docs \
@@ -121,7 +121,7 @@ export SOURCE_DATE_EPOCH=1527622046
 make  %{?_smp_mflags}
 
 %install
-export SOURCE_DATE_EPOCH=1527622046
+export SOURCE_DATE_EPOCH=1527891275
 rm -rf %{buildroot}
 %make_install
 ## make_install_append content
@@ -129,7 +129,7 @@ for file in %{buildroot}/usr/bin/*
 do
 dir=$(dirname "$file")
 bin=$(basename "$file")
-new=$(echo "$bin"|sed -e 's/qemu-/kata-qemu-lite-/g' -e 's/ivshmem-/ivshmem-lite-/g' -e 's/virtfs-/virtfs-lite-/g')
+new=$(echo "$bin"|sed -e 's/qemu-/kata-qemu-lite-/g' -e 's/ivshmem-/ivshmem-lite-/g' -e 's/virtfs-/kata-virtfs-lite-/g')
 mv "$file" "$dir/$new"
 done
 ## make_install_append end
@@ -142,7 +142,7 @@ done
 /usr/bin/kata-qemu-lite-ga
 /usr/bin/kata-qemu-lite-pr-helper
 /usr/bin/kata-qemu-lite-system-x86_64
-/usr/bin/virtfs-lite-proxy-helper
+/usr/bin/kata-virtfs-lite-proxy-helper
 /usr/libexec/kata-qemu-lite/qemu-bridge-helper
 
 %files data
