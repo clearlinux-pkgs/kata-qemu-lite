@@ -23,7 +23,7 @@ BuildRequires : libcap-ng-dev
 BuildRequires : pbr
 BuildRequires : pip
 BuildRequires : pkgconfig(pixman-1)
-BuildRequires : python-dev
+
 BuildRequires : python3-dev
 BuildRequires : setuptools
 BuildRequires : zlib-dev
