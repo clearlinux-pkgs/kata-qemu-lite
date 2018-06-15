@@ -4,7 +4,7 @@
 #
 Name     : kata-qemu-lite
 Version  : 2.11.0
-Release  : 2
+Release  : 3
 URL      : https://github.com/kata-containers/qemu/archive/qemu-lite-2.11.0.tar.gz
 Source0  : https://github.com/kata-containers/qemu/archive/qemu-lite-2.11.0.tar.gz
 Source1  : https://github.com/qemu/capstone/archive/22ead3e0bfdb87516656453336160e0a37b066bf.tar.gz
