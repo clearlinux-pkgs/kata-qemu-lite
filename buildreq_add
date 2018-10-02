@@ -5,3 +5,4 @@ libcap-ng-dev
 libcap-dev
 glib-dev
 pkgconfig(pixman-1)
+python-dev

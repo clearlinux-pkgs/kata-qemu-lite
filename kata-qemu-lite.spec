@@ -4,7 +4,7 @@
 #
 Name     : kata-qemu-lite
 Version  : 2.11.0
-Release  : 4
+Release  : 5
 URL      : https://github.com/kata-containers/qemu/archive/qemu-lite-2.11.0.tar.gz
 Source0  : https://github.com/kata-containers/qemu/archive/qemu-lite-2.11.0.tar.gz
 Source1  : https://github.com/qemu/capstone/archive/22ead3e0bfdb87516656453336160e0a37b066bf.tar.gz
@@ -12,20 +12,19 @@ Source2  : https://github.com/qemu/keycodemapdb/archive/10739aa26051a5d49d881326
 Summary  : A lightweight multi-platform, multi-architecture disassembly framework
 Group    : Development/Tools
 License  : BSD-2-Clause BSD-3-Clause GPL-2.0 LGPL-2.1 NCSA Python-2.0
+Requires: kata-qemu-lite-bin = %{version}-%{release}
+Requires: kata-qemu-lite-data = %{version}-%{release}
+Requires: kata-qemu-lite-libexec = %{version}-%{release}
+Requires: kata-qemu-lite-license = %{version}-%{release}
 Requires: kata-qemu-lite-bin
 Requires: kata-qemu-lite-data
-Requires: kata-qemu-lite-bin
-Requires: kata-qemu-lite-data
-BuildRequires : cmake
+BuildRequires : buildreq-cmake
+BuildRequires : buildreq-distutils3
 BuildRequires : glib-dev
 BuildRequires : libcap-dev
 BuildRequires : libcap-ng-dev
-BuildRequires : pbr
-BuildRequires : pip
 BuildRequires : pkgconfig(pixman-1)
 BuildRequires : python-dev
-BuildRequires : python3-dev
-BuildRequires : setuptools
 BuildRequires : zlib-dev
 Patch1: configure.patch
 Patch2: memfd-fix-configure-test.patch
@@ -37,7 +36,9 @@ disasm engine for binary analysis and reversing in the security community.
 %package bin
 Summary: bin components for the kata-qemu-lite package.
 Group: Binaries
-Requires: kata-qemu-lite-data
+Requires: kata-qemu-lite-data = %{version}-%{release}
+Requires: kata-qemu-lite-libexec = %{version}-%{release}
+Requires: kata-qemu-lite-license = %{version}-%{release}
 
 %description bin
 bin components for the kata-qemu-lite package.
@@ -51,14 +52,31 @@ Group: Data
 data components for the kata-qemu-lite package.
 
 
+%package libexec
+Summary: libexec components for the kata-qemu-lite package.
+Group: Default
+
+%description libexec
+libexec components for the kata-qemu-lite package.
+
+
+%package license
+Summary: license components for the kata-qemu-lite package.
+Group: Default
+
+%description license
+license components for the kata-qemu-lite package.
+
+
 %prep
-tar -xf %{SOURCE1}
-tar -xf %{SOURCE2}
-cd ..
 %setup -q -n qemu-qemu-lite-2.11.0
-mkdir -p %{_topdir}/BUILD/qemu-qemu-lite-2.11.0/capstone
+cd ..
+%setup -q -T -D -n qemu-qemu-lite-2.11.0 -b 1
+cd ..
+%setup -q -T -D -n qemu-qemu-lite-2.11.0 -b 2
+mkdir -p capstone
 mv %{_topdir}/BUILD/capstone-22ead3e0bfdb87516656453336160e0a37b066bf/* %{_topdir}/BUILD/qemu-qemu-lite-2.11.0/capstone
-mkdir -p %{_topdir}/BUILD/qemu-qemu-lite-2.11.0/ui/keycodemapdb
+mkdir -p ui/keycodemapdb
 mv %{_topdir}/BUILD/keycodemapdb-10739aa26051a5d49d88132604539d3ed085e72e/* %{_topdir}/BUILD/qemu-qemu-lite-2.11.0/ui/keycodemapdb
 %patch1 -p1
 %patch2 -p1
@@ -68,7 +86,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1527891275
+export SOURCE_DATE_EPOCH=1538510180
 %configure --disable-static --disable-bluez \
 --disable-brlapi \
 --disable-docs \
@@ -121,10 +139,24 @@ export SOURCE_DATE_EPOCH=1527891275
 make  %{?_smp_mflags}
 
 %install
-export SOURCE_DATE_EPOCH=1527891275
+export SOURCE_DATE_EPOCH=1538510180
 rm -rf %{buildroot}
+mkdir -p %{buildroot}/usr/share/package-licenses/kata-qemu-lite
+cp COPYING %{buildroot}/usr/share/package-licenses/kata-qemu-lite/COPYING
+cp COPYING.LIB %{buildroot}/usr/share/package-licenses/kata-qemu-lite/COPYING.LIB
+cp COPYING.PYTHON %{buildroot}/usr/share/package-licenses/kata-qemu-lite/COPYING.PYTHON
+cp LICENSE %{buildroot}/usr/share/package-licenses/kata-qemu-lite/LICENSE
+cp capstone/LICENSE.TXT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/capstone_LICENSE.TXT
+cp capstone/LICENSE_LLVM.TXT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/capstone_LICENSE_LLVM.TXT
+cp capstone/bindings/python/LICENSE.TXT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/capstone_bindings_python_LICENSE.TXT
+cp disas/libvixl/LICENCE %{buildroot}/usr/share/package-licenses/kata-qemu-lite/disas_libvixl_LICENCE
+cp linux-headers/COPYING %{buildroot}/usr/share/package-licenses/kata-qemu-lite/linux-headers_COPYING
+cp slirp/COPYRIGHT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/slirp_COPYRIGHT
+cp tests/qemu-iotests/COPYING %{buildroot}/usr/share/package-licenses/kata-qemu-lite/tests_qemu-iotests_COPYING
+cp ui/keycodemapdb/LICENSE.BSD %{buildroot}/usr/share/package-licenses/kata-qemu-lite/ui_keycodemapdb_LICENSE.BSD
+cp ui/keycodemapdb/LICENSE.GPL2 %{buildroot}/usr/share/package-licenses/kata-qemu-lite/ui_keycodemapdb_LICENSE.GPL2
 %make_install
-## make_install_append content
+## install_append content
 for file in %{buildroot}/usr/bin/*
 do
 dir=$(dirname "$file")
@@ -132,7 +164,7 @@ bin=$(basename "$file")
 new=$(echo "$bin"|sed -e 's/qemu-/kata-qemu-lite-/g' -e 's/ivshmem-/ivshmem-lite-/g' -e 's/virtfs-/kata-virtfs-lite-/g')
 mv "$file" "$dir/$new"
 done
-## make_install_append end
+## install_append end
 
 %files
 %defattr(-,root,root,-)
@@ -143,7 +175,6 @@ done
 /usr/bin/kata-qemu-lite-pr-helper
 /usr/bin/kata-qemu-lite-system-x86_64
 /usr/bin/kata-virtfs-lite-proxy-helper
-/usr/libexec/kata-qemu-lite/qemu-bridge-helper
 
 %files data
 %defattr(-,root,root,-)
@@ -232,3 +263,23 @@ done
 /usr/share/kata-qemu-lite/qemu/vgabios-virtio.bin
 /usr/share/kata-qemu-lite/qemu/vgabios-vmware.bin
 /usr/share/kata-qemu-lite/qemu/vgabios.bin
+/usr/share/package-licenses/kata-qemu-lite/disas_libvixl_LICENCE
+
+%files libexec
+%defattr(-,root,root,-)
+/usr/libexec/kata-qemu-lite/qemu-bridge-helper
+
+%files license
+%defattr(-,root,root,-)
+/usr/share/package-licenses/kata-qemu-lite/COPYING
+/usr/share/package-licenses/kata-qemu-lite/COPYING.LIB
+/usr/share/package-licenses/kata-qemu-lite/COPYING.PYTHON
+/usr/share/package-licenses/kata-qemu-lite/LICENSE
+/usr/share/package-licenses/kata-qemu-lite/capstone_LICENSE.TXT
+/usr/share/package-licenses/kata-qemu-lite/capstone_LICENSE_LLVM.TXT
+/usr/share/package-licenses/kata-qemu-lite/capstone_bindings_python_LICENSE.TXT
+/usr/share/package-licenses/kata-qemu-lite/linux-headers_COPYING
+/usr/share/package-licenses/kata-qemu-lite/slirp_COPYRIGHT
+/usr/share/package-licenses/kata-qemu-lite/tests_qemu-iotests_COPYING
+/usr/share/package-licenses/kata-qemu-lite/ui_keycodemapdb_LICENSE.BSD
+/usr/share/package-licenses/kata-qemu-lite/ui_keycodemapdb_LICENSE.GPL2
