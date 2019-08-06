@@ -4,7 +4,7 @@
 #
 Name     : kata-qemu-lite
 Version  : 2.11.0
-Release  : 7
+Release  : 8
 URL      : https://github.com/kata-containers/qemu/archive/qemu-lite-2.11.0.tar.gz
 Source0  : https://github.com/kata-containers/qemu/archive/qemu-lite-2.11.0.tar.gz
 Source1  : https://github.com/qemu/capstone/archive/22ead3e0bfdb87516656453336160e0a37b066bf.tar.gz
@@ -55,6 +55,7 @@ data components for the kata-qemu-lite package.
 %package libexec
 Summary: libexec components for the kata-qemu-lite package.
 Group: Default
+Requires: kata-qemu-lite-license = %{version}-%{release}
 
 %description libexec
 libexec components for the kata-qemu-lite package.
@@ -75,9 +76,9 @@ cd ..
 cd ..
 %setup -q -T -D -n qemu-qemu-lite-2.11.0 -b 2
 mkdir -p capstone
-mv %{_topdir}/BUILD/capstone-22ead3e0bfdb87516656453336160e0a37b066bf/* %{_topdir}/BUILD/qemu-qemu-lite-2.11.0/capstone
+cp -r %{_topdir}/BUILD/capstone-22ead3e0bfdb87516656453336160e0a37b066bf/* %{_topdir}/BUILD/qemu-qemu-lite-2.11.0/capstone
 mkdir -p ui/keycodemapdb
-mv %{_topdir}/BUILD/keycodemapdb-10739aa26051a5d49d88132604539d3ed085e72e/* %{_topdir}/BUILD/qemu-qemu-lite-2.11.0/ui/keycodemapdb
+cp -r %{_topdir}/BUILD/keycodemapdb-10739aa26051a5d49d88132604539d3ed085e72e/* %{_topdir}/BUILD/qemu-qemu-lite-2.11.0/ui/keycodemapdb
 %patch1 -p1
 %patch2 -p1
 
@@ -85,8 +86,16 @@ mv %{_topdir}/BUILD/keycodemapdb-10739aa26051a5d49d88132604539d3ed085e72e/* %{_t
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
-export LANG=C
-export SOURCE_DATE_EPOCH=1538510180
+export LANG=C.UTF-8
+export SOURCE_DATE_EPOCH=1565135617
+export GCC_IGNORE_WERROR=1
+export AR=gcc-ar
+export RANLIB=gcc-ranlib
+export NM=gcc-nm
+export CFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 "
+export FCFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 "
+export FFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 "
+export CXXFLAGS="$CXXFLAGS -O3 -ffat-lto-objects -flto=4 "
 %configure --disable-static --disable-bluez \
 --disable-brlapi \
 --disable-docs \
@@ -139,7 +148,7 @@ export SOURCE_DATE_EPOCH=1538510180
 make  %{?_smp_mflags}
 
 %install
-export SOURCE_DATE_EPOCH=1538510180
+export SOURCE_DATE_EPOCH=1565135617
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/share/package-licenses/kata-qemu-lite
 cp COPYING %{buildroot}/usr/share/package-licenses/kata-qemu-lite/COPYING
@@ -156,6 +165,8 @@ cp tests/qemu-iotests/COPYING %{buildroot}/usr/share/package-licenses/kata-qemu-
 cp ui/keycodemapdb/LICENSE.BSD %{buildroot}/usr/share/package-licenses/kata-qemu-lite/ui_keycodemapdb_LICENSE.BSD
 cp ui/keycodemapdb/LICENSE.GPL2 %{buildroot}/usr/share/package-licenses/kata-qemu-lite/ui_keycodemapdb_LICENSE.GPL2
 %make_install
+## Remove excluded files
+rm -f %{buildroot}/usr/share/kata-qemu-lite/qemu/u-boot.e500
 ## install_append content
 for file in %{buildroot}/usr/bin/*
 do
@@ -256,21 +267,19 @@ done
 /usr/share/kata-qemu-lite/qemu/slof.bin
 /usr/share/kata-qemu-lite/qemu/spapr-rtas.bin
 /usr/share/kata-qemu-lite/qemu/trace-events-all
-/usr/share/kata-qemu-lite/qemu/u-boot.e500
 /usr/share/kata-qemu-lite/qemu/vgabios-cirrus.bin
 /usr/share/kata-qemu-lite/qemu/vgabios-qxl.bin
 /usr/share/kata-qemu-lite/qemu/vgabios-stdvga.bin
 /usr/share/kata-qemu-lite/qemu/vgabios-virtio.bin
 /usr/share/kata-qemu-lite/qemu/vgabios-vmware.bin
 /usr/share/kata-qemu-lite/qemu/vgabios.bin
-/usr/share/package-licenses/kata-qemu-lite/disas_libvixl_LICENCE
 
 %files libexec
 %defattr(-,root,root,-)
 /usr/libexec/kata-qemu-lite/qemu-bridge-helper
 
 %files license
-%defattr(-,root,root,-)
+%defattr(0644,root,root,0755)
 /usr/share/package-licenses/kata-qemu-lite/COPYING
 /usr/share/package-licenses/kata-qemu-lite/COPYING.LIB
 /usr/share/package-licenses/kata-qemu-lite/COPYING.PYTHON
@@ -278,6 +287,7 @@ done
 /usr/share/package-licenses/kata-qemu-lite/capstone_LICENSE.TXT
 /usr/share/package-licenses/kata-qemu-lite/capstone_LICENSE_LLVM.TXT
 /usr/share/package-licenses/kata-qemu-lite/capstone_bindings_python_LICENSE.TXT
+/usr/share/package-licenses/kata-qemu-lite/disas_libvixl_LICENCE
 /usr/share/package-licenses/kata-qemu-lite/linux-headers_COPYING
 /usr/share/package-licenses/kata-qemu-lite/slirp_COPYRIGHT
 /usr/share/package-licenses/kata-qemu-lite/tests_qemu-iotests_COPYING
