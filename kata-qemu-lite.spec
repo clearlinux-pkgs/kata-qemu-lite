@@ -4,12 +4,12 @@
 #
 Name     : kata-qemu-lite
 Version  : 2.11.0
-Release  : 8
+Release  : 9
 URL      : https://github.com/kata-containers/qemu/archive/qemu-lite-2.11.0.tar.gz
 Source0  : https://github.com/kata-containers/qemu/archive/qemu-lite-2.11.0.tar.gz
 Source1  : https://github.com/qemu/capstone/archive/22ead3e0bfdb87516656453336160e0a37b066bf.tar.gz
 Source2  : https://github.com/qemu/keycodemapdb/archive/10739aa26051a5d49d88132604539d3ed085e72e.tar.gz
-Summary  : A lightweight multi-platform, multi-architecture disassembly framework
+Summary  : No detailed summary available
 Group    : Development/Tools
 License  : BSD-2-Clause BSD-3-Clause GPL-2.0 LGPL-2.1 NCSA Python-2.0
 Requires: kata-qemu-lite-bin = %{version}-%{release}
@@ -18,8 +18,6 @@ Requires: kata-qemu-lite-libexec = %{version}-%{release}
 Requires: kata-qemu-lite-license = %{version}-%{release}
 Requires: kata-qemu-lite-bin
 Requires: kata-qemu-lite-data
-BuildRequires : buildreq-cmake
-BuildRequires : buildreq-distutils3
 BuildRequires : glib-dev
 BuildRequires : libcap-dev
 BuildRequires : libcap-ng-dev
@@ -28,10 +26,12 @@ BuildRequires : python-dev
 BuildRequires : zlib-dev
 Patch1: configure.patch
 Patch2: memfd-fix-configure-test.patch
+Patch3: CVE-2020-15863.patch
 
 %description
-Capstone is a disassembly framework with the target of becoming the ultimate
-disasm engine for binary analysis and reversing in the security community.
+===========
+QEMU is a generic and open source machine & userspace emulator and
+virtualizer.
 
 %package bin
 Summary: bin components for the kata-qemu-lite package.
@@ -71,31 +71,33 @@ license components for the kata-qemu-lite package.
 
 %prep
 %setup -q -n qemu-qemu-lite-2.11.0
-cd ..
-%setup -q -T -D -n qemu-qemu-lite-2.11.0 -b 1
-cd ..
-%setup -q -T -D -n qemu-qemu-lite-2.11.0 -b 2
+cd %{_builddir}
+tar xf %{_sourcedir}/22ead3e0bfdb87516656453336160e0a37b066bf.tar.gz
+cd %{_builddir}
+tar xf %{_sourcedir}/10739aa26051a5d49d88132604539d3ed085e72e.tar.gz
+cd %{_builddir}/qemu-qemu-lite-2.11.0
 mkdir -p capstone
-cp -r %{_topdir}/BUILD/capstone-22ead3e0bfdb87516656453336160e0a37b066bf/* %{_topdir}/BUILD/qemu-qemu-lite-2.11.0/capstone
+cp -r %{_builddir}/capstone-22ead3e0bfdb87516656453336160e0a37b066bf/* %{_builddir}/qemu-qemu-lite-2.11.0/capstone
 mkdir -p ui/keycodemapdb
-cp -r %{_topdir}/BUILD/keycodemapdb-10739aa26051a5d49d88132604539d3ed085e72e/* %{_topdir}/BUILD/qemu-qemu-lite-2.11.0/ui/keycodemapdb
+cp -r %{_builddir}/keycodemapdb-10739aa26051a5d49d88132604539d3ed085e72e/* %{_builddir}/qemu-qemu-lite-2.11.0/ui/keycodemapdb
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1565135617
+export SOURCE_DATE_EPOCH=1600212009
 export GCC_IGNORE_WERROR=1
 export AR=gcc-ar
 export RANLIB=gcc-ranlib
 export NM=gcc-nm
-export CFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 "
-export FCFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 "
-export FFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 "
-export CXXFLAGS="$CXXFLAGS -O3 -ffat-lto-objects -flto=4 "
+export CFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 -fstack-protector-strong -mzero-caller-saved-regs=used "
+export FCFLAGS="$FFLAGS -O3 -ffat-lto-objects -flto=4 -fstack-protector-strong -mzero-caller-saved-regs=used "
+export FFLAGS="$FFLAGS -O3 -ffat-lto-objects -flto=4 -fstack-protector-strong -mzero-caller-saved-regs=used "
+export CXXFLAGS="$CXXFLAGS -O3 -ffat-lto-objects -flto=4 -fstack-protector-strong -mzero-caller-saved-regs=used "
 %configure --disable-static --disable-bluez \
 --disable-brlapi \
 --disable-docs \
@@ -148,26 +150,27 @@ export CXXFLAGS="$CXXFLAGS -O3 -ffat-lto-objects -flto=4 "
 make  %{?_smp_mflags}
 
 %install
-export SOURCE_DATE_EPOCH=1565135617
+export SOURCE_DATE_EPOCH=1600212009
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/share/package-licenses/kata-qemu-lite
-cp COPYING %{buildroot}/usr/share/package-licenses/kata-qemu-lite/COPYING
-cp COPYING.LIB %{buildroot}/usr/share/package-licenses/kata-qemu-lite/COPYING.LIB
-cp COPYING.PYTHON %{buildroot}/usr/share/package-licenses/kata-qemu-lite/COPYING.PYTHON
-cp LICENSE %{buildroot}/usr/share/package-licenses/kata-qemu-lite/LICENSE
-cp capstone/LICENSE.TXT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/capstone_LICENSE.TXT
-cp capstone/LICENSE_LLVM.TXT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/capstone_LICENSE_LLVM.TXT
-cp capstone/bindings/python/LICENSE.TXT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/capstone_bindings_python_LICENSE.TXT
-cp disas/libvixl/LICENCE %{buildroot}/usr/share/package-licenses/kata-qemu-lite/disas_libvixl_LICENCE
-cp linux-headers/COPYING %{buildroot}/usr/share/package-licenses/kata-qemu-lite/linux-headers_COPYING
-cp slirp/COPYRIGHT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/slirp_COPYRIGHT
-cp tests/qemu-iotests/COPYING %{buildroot}/usr/share/package-licenses/kata-qemu-lite/tests_qemu-iotests_COPYING
-cp ui/keycodemapdb/LICENSE.BSD %{buildroot}/usr/share/package-licenses/kata-qemu-lite/ui_keycodemapdb_LICENSE.BSD
-cp ui/keycodemapdb/LICENSE.GPL2 %{buildroot}/usr/share/package-licenses/kata-qemu-lite/ui_keycodemapdb_LICENSE.GPL2
+cp %{_builddir}/capstone-22ead3e0bfdb87516656453336160e0a37b066bf/LICENSE.TXT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/861af24907e399e873920dbbff1ea1dd73a9ba35
+cp %{_builddir}/capstone-22ead3e0bfdb87516656453336160e0a37b066bf/LICENSE_LLVM.TXT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/afc034c0ae47cbd47a99c6c5992d846511bb33ad
+cp %{_builddir}/capstone-22ead3e0bfdb87516656453336160e0a37b066bf/bindings/python/LICENSE.TXT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/861af24907e399e873920dbbff1ea1dd73a9ba35
+cp %{_builddir}/keycodemapdb-10739aa26051a5d49d88132604539d3ed085e72e/LICENSE.BSD %{buildroot}/usr/share/package-licenses/kata-qemu-lite/ea5b412c09f3b29ba1d81a61b878c5c16ffe69d8
+cp %{_builddir}/keycodemapdb-10739aa26051a5d49d88132604539d3ed085e72e/LICENSE.GPL2 %{buildroot}/usr/share/package-licenses/kata-qemu-lite/06877624ea5c77efe3b7e39b0f909eda6e25a4ec
+cp %{_builddir}/qemu-qemu-lite-2.11.0/COPYING %{buildroot}/usr/share/package-licenses/kata-qemu-lite/2b9d60c2972b476384af9900276837ac81954e80
+cp %{_builddir}/qemu-qemu-lite-2.11.0/COPYING.LIB %{buildroot}/usr/share/package-licenses/kata-qemu-lite/c5041828c23a816cc38e662b61032e959cb86893
+cp %{_builddir}/qemu-qemu-lite-2.11.0/COPYING.PYTHON %{buildroot}/usr/share/package-licenses/kata-qemu-lite/4fb749718a2ccd73467eb2351b1acd621f44a353
+cp %{_builddir}/qemu-qemu-lite-2.11.0/LICENSE %{buildroot}/usr/share/package-licenses/kata-qemu-lite/0af1677615a1f197b23b9a8c28f65ea80125d9a0
+cp %{_builddir}/qemu-qemu-lite-2.11.0/disas/libvixl/LICENCE %{buildroot}/usr/share/package-licenses/kata-qemu-lite/25383eb1c76eae5993e92a1cf2b75d58e599bbf5
+cp %{_builddir}/qemu-qemu-lite-2.11.0/linux-headers/COPYING %{buildroot}/usr/share/package-licenses/kata-qemu-lite/d3c00f9396c6d0277727cec522ff6ad1ea0bc2da
+cp %{_builddir}/qemu-qemu-lite-2.11.0/slirp/COPYRIGHT %{buildroot}/usr/share/package-licenses/kata-qemu-lite/300155fc2f02d0dbcb70bd405fb4bc620c78eb73
+cp %{_builddir}/qemu-qemu-lite-2.11.0/tests/qemu-iotests/COPYING %{buildroot}/usr/share/package-licenses/kata-qemu-lite/2b9d60c2972b476384af9900276837ac81954e80
 %make_install
 ## Remove excluded files
 rm -f %{buildroot}/usr/share/kata-qemu-lite/qemu/u-boot.e500
 ## install_append content
+# rename to avoid conflict with qemu package
 for file in %{buildroot}/usr/bin/*
 do
 dir=$(dirname "$file")
@@ -280,16 +283,14 @@ done
 
 %files license
 %defattr(0644,root,root,0755)
-/usr/share/package-licenses/kata-qemu-lite/COPYING
-/usr/share/package-licenses/kata-qemu-lite/COPYING.LIB
-/usr/share/package-licenses/kata-qemu-lite/COPYING.PYTHON
-/usr/share/package-licenses/kata-qemu-lite/LICENSE
-/usr/share/package-licenses/kata-qemu-lite/capstone_LICENSE.TXT
-/usr/share/package-licenses/kata-qemu-lite/capstone_LICENSE_LLVM.TXT
-/usr/share/package-licenses/kata-qemu-lite/capstone_bindings_python_LICENSE.TXT
-/usr/share/package-licenses/kata-qemu-lite/disas_libvixl_LICENCE
-/usr/share/package-licenses/kata-qemu-lite/linux-headers_COPYING
-/usr/share/package-licenses/kata-qemu-lite/slirp_COPYRIGHT
-/usr/share/package-licenses/kata-qemu-lite/tests_qemu-iotests_COPYING
-/usr/share/package-licenses/kata-qemu-lite/ui_keycodemapdb_LICENSE.BSD
-/usr/share/package-licenses/kata-qemu-lite/ui_keycodemapdb_LICENSE.GPL2
+/usr/share/package-licenses/kata-qemu-lite/06877624ea5c77efe3b7e39b0f909eda6e25a4ec
+/usr/share/package-licenses/kata-qemu-lite/0af1677615a1f197b23b9a8c28f65ea80125d9a0
+/usr/share/package-licenses/kata-qemu-lite/25383eb1c76eae5993e92a1cf2b75d58e599bbf5
+/usr/share/package-licenses/kata-qemu-lite/2b9d60c2972b476384af9900276837ac81954e80
+/usr/share/package-licenses/kata-qemu-lite/300155fc2f02d0dbcb70bd405fb4bc620c78eb73
+/usr/share/package-licenses/kata-qemu-lite/4fb749718a2ccd73467eb2351b1acd621f44a353
+/usr/share/package-licenses/kata-qemu-lite/861af24907e399e873920dbbff1ea1dd73a9ba35
+/usr/share/package-licenses/kata-qemu-lite/afc034c0ae47cbd47a99c6c5992d846511bb33ad
+/usr/share/package-licenses/kata-qemu-lite/c5041828c23a816cc38e662b61032e959cb86893
+/usr/share/package-licenses/kata-qemu-lite/d3c00f9396c6d0277727cec522ff6ad1ea0bc2da
+/usr/share/package-licenses/kata-qemu-lite/ea5b412c09f3b29ba1d81a61b878c5c16ffe69d8
